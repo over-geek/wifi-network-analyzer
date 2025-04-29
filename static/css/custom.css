@@ -84,3 +84,16 @@
 .tab-content {
     padding-top: 20px;
 }
+
+/* Advanced Analysis Tab Styles */
+#unknown-vendors-textarea, #known-vendors-textarea {
+    font-family: monospace;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.card-header small {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}

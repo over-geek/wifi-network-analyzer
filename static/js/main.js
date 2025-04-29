@@ -12,6 +12,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const copyReportBtn = document.getElementById('copy-report-btn');
     const statsContainer = document.getElementById('stats-container');
     
+    // Advanced analysis elements
+    const orgSsidsInput = document.getElementById('org-ssids');
+    const updateAnalysisBtn = document.getElementById('update-analysis-btn');
+    const unknownVendorsTextarea = document.getElementById('unknown-vendors-textarea');
+    const knownVendorsTextarea = document.getElementById('known-vendors-textarea');
+    const copyUnknownBtn = document.getElementById('copy-unknown-btn');
+    const copyKnownBtn = document.getElementById('copy-known-btn');
+    
+    // Store analysis results globally for advanced analysis
+    let analysisResults = [];
+    
     // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -127,6 +138,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Store results for advanced analysis
+        analysisResults = data.results.map(result => {
+            // Clean SSID of any True/False prefixes
+            let cleanSsid = result.ssid.replace(/^(True|False)\s+/, '');
+            return {
+                ...result,
+                ssid: cleanSsid
+            };
+        });
+        
         // Show results container
         resultsContainer.classList.remove('d-none');
         
@@ -139,18 +160,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Generate table rows and report text
         let reportText = '';
         
-        data.results.forEach(result => {
+        analysisResults.forEach(result => {
             // Add to table
             const row = document.createElement('tr');
             if (result.flagged) {
                 row.classList.add('flagged-row');
             }
             
-            // Make sure to clean SSID of any True/False prefixes for display
-            let cleanSsid = result.ssid.replace(/^(True|False)\s+/, '');
-            
             row.innerHTML = `
-                <td>${escapeHtml(cleanSsid)}</td>
+                <td>${escapeHtml(result.ssid)}</td>
                 <td class="format-column">${escapeHtml(result.bssid)}</td>
                 <td class="format-column">----</td>
                 <td>${escapeHtml(result.vendor)}</td>
@@ -158,12 +176,80 @@ document.addEventListener('DOMContentLoaded', function() {
             
             resultsTableBody.appendChild(row);
             
-            // Add to report text - using the already cleaned SSID
-            reportText += `${cleanSsid} ${result.bssid} ---- ${result.vendor}\n`;
+            // Add to report text
+            reportText += `${result.ssid} ${result.bssid} ---- ${result.vendor}\n`;
         });
         
         // Set report text
         reportTextarea.value = reportText;
+        
+        // Also update the advanced analysis if we have data
+        updateAdvancedAnalysis();
+    }
+    
+    // Function to check if a network belongs to the organization
+    function isOrganizationNetwork(ssid, orgSsids) {
+        if (!orgSsids || !ssid) return false;
+        
+        // Clean up and normalize organization SSIDs
+        const normalizedOrgSsids = orgSsids
+            .split(',')
+            .map(s => s.trim().toLowerCase())
+            .filter(s => s.length > 0);
+        
+        // Check if the network SSID matches any organization SSID
+        return normalizedOrgSsids.some(orgSsid => 
+            ssid.toLowerCase().includes(orgSsid) || 
+            orgSsid.includes(ssid.toLowerCase())
+        );
+    }
+    
+    // Function to update the advanced analysis tab
+    function updateAdvancedAnalysis() {
+        if (!analysisResults || analysisResults.length === 0) return;
+        
+        // Get organization SSIDs
+        const orgSsids = orgSsidsInput.value;
+        
+        // Filter networks
+        const unknownVendorNetworks = analysisResults.filter(network => 
+            !isOrganizationNetwork(network.ssid, orgSsids) && 
+            (!network.vendor || network.vendor.includes('UNKNOWN'))
+        );
+        
+        const knownVendorNetworks = analysisResults.filter(network => 
+            !isOrganizationNetwork(network.ssid, orgSsids) && 
+            network.vendor && !network.vendor.includes('UNKNOWN')
+        );
+        
+        // Format for unknown vendor networks (excluding organization networks)
+        if (unknownVendorNetworks.length > 0) {
+            // Format as a quoted list with commas between items
+            const formattedUnknown = unknownVendorNetworks
+                .map(network => `"${network.ssid}"`)
+                .join(', ');
+                
+            unknownVendorsTextarea.value = formattedUnknown;
+        } else {
+            unknownVendorsTextarea.value = 'No unknown vendor networks found (excluding organization networks)';
+        }
+        
+        // Format for known vendor networks (excluding organization networks)
+        if (knownVendorNetworks.length > 0) {
+            // Format SSIDs list
+            const formattedSsids = knownVendorNetworks
+                .map(network => `"${network.ssid}"`)
+                .join(', ');
+                
+            // Format vendors list
+            const formattedVendors = knownVendorNetworks
+                .map(network => `"${network.vendor}"`)
+                .join(', ');
+                
+            knownVendorsTextarea.value = formattedSsids + '\n\n' + formattedVendors;
+        } else {
+            knownVendorsTextarea.value = 'No known vendor networks found (excluding organization networks)';
+        }
     }
     
     // Copy report button
@@ -203,6 +289,43 @@ SSID: IT Department, BSSID: 11:22:33:44:55:66
 Free WiFi 12:34:56:78:90:ab
 ICPS 74:83:c2:2d:1d:b1
 Visitor 24:a0:74:1e:9f:ac`;
+        });
+    }
+    
+    // Update analysis button event listener
+    if (updateAnalysisBtn) {
+        updateAnalysisBtn.addEventListener('click', function() {
+            updateAdvancedAnalysis();
+        });
+    }
+    
+    // Copy unknown vendors button
+    if (copyUnknownBtn) {
+        copyUnknownBtn.addEventListener('click', function() {
+            unknownVendorsTextarea.select();
+            document.execCommand('copy');
+            
+            // Show feedback
+            const originalText = copyUnknownBtn.textContent;
+            copyUnknownBtn.innerHTML = '<i class="bi bi-clipboard-check"></i> Copied!';
+            setTimeout(() => {
+                copyUnknownBtn.innerHTML = '<i class="bi bi-clipboard"></i> Copy';
+            }, 2000);
+        });
+    }
+    
+    // Copy known vendors button
+    if (copyKnownBtn) {
+        copyKnownBtn.addEventListener('click', function() {
+            knownVendorsTextarea.select();
+            document.execCommand('copy');
+            
+            // Show feedback
+            const originalText = copyKnownBtn.textContent;
+            copyKnownBtn.innerHTML = '<i class="bi bi-clipboard-check"></i> Copied!';
+            setTimeout(() => {
+                copyKnownBtn.innerHTML = '<i class="bi bi-clipboard"></i> Copy';
+            }, 2000);
         });
     }
 });
