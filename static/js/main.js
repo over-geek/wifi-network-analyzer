@@ -146,8 +146,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.classList.add('flagged-row');
             }
             
+            // Make sure to clean SSID of any True/False prefixes for display
+            let cleanSsid = result.ssid.replace(/^(True|False)\s+/, '');
+            
             row.innerHTML = `
-                <td>${escapeHtml(result.ssid)}</td>
+                <td>${escapeHtml(cleanSsid)}</td>
                 <td class="format-column">${escapeHtml(result.bssid)}</td>
                 <td class="format-column">----</td>
                 <td>${escapeHtml(result.vendor)}</td>
@@ -155,8 +158,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             resultsTableBody.appendChild(row);
             
-            // Add to report text
-            reportText += `${result.ssid} ${result.bssid} ---- ${result.vendor}\n`;
+            // Add to report text - make sure no True/False prefixes are present
+            let cleanSsid = result.ssid.replace(/^(True|False)\s+/, '');
+            reportText += `${cleanSsid} ${result.bssid} ---- ${result.vendor}\n`;
         });
         
         // Set report text

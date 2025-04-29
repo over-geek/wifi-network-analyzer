@@ -26,6 +26,9 @@ def parse_wifi_data(text):
     # Pattern for "[ssid] [mac]" format - More lenient with MAC address format
     pattern3 = r'([^\n\r,]{1,32})\s+([0-9A-Fa-f:.-]{10,17})'
     
+    # Pattern for WiFi surveyor app format: [True/False] [SSID] [MAC] [other data]
+    pattern4 = r'(True|False)\s+([^\t]+)\s+([0-9A-Fa-f:.-]{10,17})'
+    
     # MAC address pattern for extracting from messy text - more lenient
     mac_pattern = r'([0-9A-Fa-f]{2}[:-]){4,5}([0-9A-Fa-f]{1,2})|([0-9A-Fa-f]{10,12})'
     
@@ -39,6 +42,14 @@ def parse_wifi_data(text):
             continue
         
         logger.debug(f"Parsing line: {line}")
+        
+        # Try WiFi surveyor app format first
+        match = re.search(pattern4, line)
+        if match:
+            _, ssid, bssid = match.groups()  # Ignore the True/False flag
+            results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
+            logger.debug(f"WiFi surveyor format matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
+            continue
             
         # Try pattern 1
         match = re.search(pattern1, line)
@@ -52,6 +63,8 @@ def parse_wifi_data(text):
         match = re.search(pattern3, line)
         if match:
             ssid, bssid = match.groups()
+            # Clean up 'True' or 'False' prefixes that might be part of the SSID
+            ssid = re.sub(r'^(True|False)\s+', '', ssid.strip())
             results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
             logger.debug(f"Pattern 3 matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
             continue
@@ -63,6 +76,31 @@ def parse_wifi_data(text):
             results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
             logger.debug(f"Pattern 2 matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
             continue
+        
+        # If the line contains tab-separated values (like from wifi surveyor or CSV exports)
+        if '\t' in line:
+            parts = line.split('\t')
+            logger.debug(f"Processing tab-separated line with {len(parts)} parts")
+            mac_address = None
+            ssid = None
+            
+            # Look for MAC address in each part
+            for i, part in enumerate(parts):
+                # Check if this part contains a MAC address
+                mac_match = re.search(r'([0-9A-Fa-f]{2}[:-]){4,5}[0-9A-Fa-f]{1,2}|[0-9A-Fa-f]{10,12}', part)
+                if mac_match:
+                    mac_address = mac_match.group(0)
+                    # If MAC found, look for SSID - usually column 2 in wifi surveyor format
+                    if i >= 1 and len(parts) > 1:
+                        ssid = parts[1].strip()
+                    break
+            
+            if mac_address and ssid:
+                # Remove any "True" or "False" prefix if present
+                ssid = re.sub(r'^(True|False)\s+', '', ssid)
+                results.append({'ssid': ssid, 'bssid': mac_address})
+                logger.debug(f"Tab-separated format: SSID={ssid}, BSSID={mac_address}")
+                continue
         
         # If none of the patterns match but line contains what looks like a MAC address
         mac_match = re.search(r'([0-9A-Fa-f]{2}[:-]){4,5}[0-9A-Fa-f]{1,2}|[0-9A-Fa-f]{10,12}', line)
@@ -78,6 +116,8 @@ def parse_wifi_data(text):
             else:
                 # Otherwise, use text before MAC as SSID
                 ssid = before_mac
+                # Clean up 'True' or 'False' prefixes
+                ssid = re.sub(r'^(True|False)\s+', '', ssid)
                 
             results.append({'ssid': ssid, 'bssid': bssid})
             logger.debug(f"MAC extraction matched: SSID={ssid}, BSSID={bssid}")
@@ -107,6 +147,7 @@ def parse_wifi_data(text):
             else:
                 # Just use some text near the MAC as the SSID
                 words_before = ' '.join(context[:match.start()-start_pos].split()[-3:])
+                words_before = re.sub(r'^(True|False)\s+', '', words_before)
                 ssid = words_before.strip() if words_before else "Unknown SSID"
             
             results.append({'ssid': ssid, 'bssid': bssid})
