@@ -158,8 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             resultsTableBody.appendChild(row);
             
-            // Add to report text - make sure no True/False prefixes are present
-            let cleanSsid = result.ssid.replace(/^(True|False)\s+/, '');
+            // Add to report text - using the already cleaned SSID
             reportText += `${cleanSsid} ${result.bssid} ---- ${result.vendor}\n`;
         });
         
