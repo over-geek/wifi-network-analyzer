@@ -1,0 +1,153 @@
+{% extends 'layout.html' %}
+
+{% block title %}WiFi Rogue Network Detector{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">WiFi Network Analysis Tool</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        This tool helps SOC analysts detect potential rogue WiFi networks by analyzing SSID/BSSID pairs, 
+                        identifying vendor OUIs, and flagging entries with no vendor matches.
+                    </p>
+                    
+                    <ul class="nav nav-tabs" id="inputTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-tab-pane" 
+                                type="button" role="tab" aria-controls="file-tab-pane" aria-selected="true">
+                                File Upload
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-tab-pane" 
+                                type="button" role="tab" aria-controls="text-tab-pane" aria-selected="false">
+                                Text Input
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="inputTabsContent">
+                        <!-- File Upload Tab -->
+                        <div class="tab-pane fade show active" id="file-tab-pane" role="tabpanel" aria-labelledby="file-tab" tabindex="0">
+                            <div id="drop-zone" class="drop-zone">
+                                <p>Drag & drop a text file here or</p>
+                                <div class="mb-3">
+                                    <input class="form-control" type="file" id="file-input" accept=".txt,.csv,.log">
+                                </div>
+                                <p id="file-name">No file selected</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Text Input Tab -->
+                        <div class="tab-pane fade" id="text-tab-pane" role="tabpanel" aria-labelledby="text-tab" tabindex="0">
+                            <div class="mb-3">
+                                <label for="text-input" class="form-label">
+                                    Paste SSID/BSSID data 
+                                    <span class="help-icon" data-bs-toggle="tooltip" title="Enter SSID and BSSID pairs in any format">
+                                        <i class="bi bi-question-circle"></i>
+                                    </span>
+                                </label>
+                                <textarea class="form-control text-input-area" id="text-input" rows="6" 
+                                    placeholder="Enter WiFi data here..."></textarea>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <small class="text-muted">Supported formats: "SSID BSSID", "BSSID - SSID", "SSID: name, BSSID: mac"</small>
+                                    <button id="sample-btn" class="btn btn-sm btn-outline-secondary">Load Sample Data</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <button class="btn btn-primary" id="analyze-btn">
+                            <i class="bi bi-search"></i> Analyze WiFi Networks
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alerts Container -->
+    <div id="alert-container"></div>
+    
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="spinner-container d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    
+    <!-- Results Container (initially hidden) -->
+    <div id="results-container" class="results-container d-none">
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Analysis Results</h5>
+                        <div id="stats-container"></div>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" id="resultTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="table-tab" data-bs-toggle="tab" data-bs-target="#table-tab-pane" 
+                                    type="button" role="tab" aria-controls="table-tab-pane" aria-selected="true">
+                                    Table View
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="report-tab" data-bs-toggle="tab" data-bs-target="#report-tab-pane" 
+                                    type="button" role="tab" aria-controls="report-tab-pane" aria-selected="false">
+                                    Report View
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="resultTabsContent">
+                            <!-- Table View Tab -->
+                            <div class="tab-pane fade show active" id="table-tab-pane" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>SSID</th>
+                                                <th>BSSID</th>
+                                                <th>Separator</th>
+                                                <th>Vendor/Make</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="results-table-body">
+                                            <!-- Results will be dynamically added here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    <strong>Note:</strong> Entries highlighted in red have no vendor match and may be rogue networks.
+                                </div>
+                            </div>
+                            
+                            <!-- Report View Tab -->
+                            <div class="tab-pane fade" id="report-tab-pane" role="tabpanel" aria-labelledby="report-tab" tabindex="0">
+                                <div class="mb-3">
+                                    <label for="report-textarea" class="form-label">
+                                        Formatted Report
+                                        <button id="copy-report-btn" class="btn btn-sm btn-outline-secondary copy-btn">
+                                            <i class="bi bi-clipboard"></i> Copy
+                                        </button>
+                                    </label>
+                                    <textarea class="form-control" id="report-textarea" rows="10" readonly></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

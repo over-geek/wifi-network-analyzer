@@ -1,0 +1,86 @@
+/* Additional custom styling beyond Bootstrap */
+
+/* Report table highlights */
+.flagged-row {
+    background-color: rgba(var(--bs-danger-rgb), 0.2) !important;
+}
+
+/* Card and container spacing */
+.results-container {
+    margin-top: 20px;
+}
+
+/* Loading spinner */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
+/* File upload area styling */
+.drop-zone {
+    border: 2px dashed var(--bs-secondary);
+    border-radius: 5px;
+    padding: 20px;
+    text-align: center;
+    transition: border-color 0.3s;
+}
+
+.drop-zone:hover, .drop-zone.active {
+    border-color: var(--bs-primary);
+}
+
+/* Custom text input area */
+.text-input-area {
+    min-height: 150px;
+    resize: vertical;
+}
+
+/* Make cards look consistent */
+.card {
+    height: 100%;
+    margin-bottom: 20px;
+}
+
+/* Stats badges */
+.stat-badge {
+    font-size: 1.1rem;
+    margin-right: 10px;
+}
+
+/* Make text more readable */
+.text-muted {
+    color: var(--bs-gray-500) !important;
+}
+
+/* Format column */
+.format-column {
+    font-family: monospace;
+    white-space: nowrap;
+}
+
+/* Help tooltip styles */
+.help-icon {
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+/* Make form elements consistent */
+.form-control, .btn {
+    margin-bottom: 10px;
+}
+
+.form-label {
+    margin-bottom: 0.25rem;
+}
+
+/* Report copy button */
+.copy-btn {
+    margin-left: 10px;
+}
+
+/* Tab content */
+.tab-content {
+    padding-top: 20px;
+}
