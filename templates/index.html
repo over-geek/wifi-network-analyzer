@@ -212,6 +212,65 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Advanced Analysis Tab -->
+                            <div class="tab-pane fade" id="advanced-tab-pane" role="tabpanel" aria-labelledby="advanced-tab" tabindex="0">
+                                <div class="row mt-3">
+                                    <!-- Organization Settings -->
+                                    <div class="col-md-12 mb-3">
+                                        <div class="card">
+                                            <div class="card-header bg-secondary text-white">
+                                                <h6 class="mb-0">Organization Settings</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">Enter the SSIDs that belong to your organization (comma-separated)</p>
+                                                <div class="input-group mb-3">
+                                                    <input type="text" id="org-ssids" class="form-control" placeholder="e.g. ICPS, ICPS Guest, DVLA" value="ICPS, ICPS Guest, DVLA">
+                                                    <button class="btn btn-outline-secondary" type="button" id="update-analysis-btn">
+                                                        <i class="bi bi-arrow-repeat"></i> Update Analysis
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Unknown Vendor Networks (excluding organization networks) -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100">
+                                            <div class="card-header bg-danger text-white">
+                                                <h6 class="mb-0">Unknown Vendor Networks</h6>
+                                                <small class="text-white-50">Non-organization networks with no vendor match (potential rogue networks)</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <textarea id="unknown-vendors-textarea" class="form-control" rows="8" readonly></textarea>
+                                                <div class="mt-2 text-end">
+                                                    <button id="copy-unknown-btn" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-clipboard"></i> Copy
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Known Vendor Networks (excluding organization networks) -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100">
+                                            <div class="card-header bg-info text-white">
+                                                <h6 class="mb-0">Known Vendor Networks</h6>
+                                                <small class="text-white-50">Non-organization networks with identified vendors</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <textarea id="known-vendors-textarea" class="form-control" rows="8" readonly></textarea>
+                                                <div class="mt-2 text-end">
+                                                    <button id="copy-known-btn" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-clipboard"></i> Copy
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

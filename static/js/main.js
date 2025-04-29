@@ -184,7 +184,10 @@ document.addEventListener('DOMContentLoaded', function() {
         reportTextarea.value = reportText;
         
         // Also update the advanced analysis if we have data
-        updateAdvancedAnalysis();
+        // Check if advanced analysis elements exist before updating
+        if (document.getElementById('advanced-tab-pane')) {
+            updateAdvancedAnalysis();
+        }
     }
     
     // Function to check if a network belongs to the organization
@@ -207,6 +210,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to update the advanced analysis tab
     function updateAdvancedAnalysis() {
         if (!analysisResults || analysisResults.length === 0) return;
+        
+        // Check if all required elements exist
+        if (!document.getElementById('org-ssids') || 
+            !document.getElementById('unknown-vendors-textarea') || 
+            !document.getElementById('known-vendors-textarea')) {
+            console.error('Advanced analysis elements not found');
+            return;
+        }
         
         // Get organization SSIDs
         const orgSsids = orgSsidsInput.value;
