@@ -197,7 +197,9 @@ document.addEventListener('DOMContentLoaded', function() {
 Guest Network 66:77:88:99:aa:bb
 Conference Room aa:bb:cc:dd:ee:ff
 SSID: IT Department, BSSID: 11:22:33:44:55:66
-Free WiFi 12:34:56:78:90:ab`;
+Free WiFi 12:34:56:78:90:ab
+ICPS 74:83:c2:2d:1d:b1
+Visitor 24:a0:74:1e:9f:ac`;
         });
     }
 });

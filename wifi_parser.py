@@ -21,13 +21,13 @@ def parse_wifi_data(text):
     pattern1 = r'SSID\s*:?\s*["\']?([^,"\']+)["\']?\s*,?\s*BSSID\s*:?\s*([0-9A-Fa-f:.-]+)'
     
     # Pattern for "[mac] - [ssid]" format
-    pattern2 = r'([0-9A-Fa-f:.-]{12,17})\s*-?\s*([^\n\r,]+)'
+    pattern2 = r'([0-9A-Fa-f:.-]{10,17})\s*-?\s*([^\n\r,]+)'
     
-    # Pattern for "[ssid] [mac]" format
-    pattern3 = r'([^\n\r,]{1,32})\s+([0-9A-Fa-f:.-]{12,17})'
+    # Pattern for "[ssid] [mac]" format - More lenient with MAC address format
+    pattern3 = r'([^\n\r,]{1,32})\s+([0-9A-Fa-f:.-]{10,17})'
     
-    # MAC address pattern for extracting from messy text
-    mac_pattern = r'([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})|([0-9A-Fa-f]{12})'
+    # MAC address pattern for extracting from messy text - more lenient
+    mac_pattern = r'([0-9A-Fa-f]{2}[:-]){4,5}([0-9A-Fa-f]{1,2})|([0-9A-Fa-f]{10,12})'
     
     # Try multiple parsing strategies
     
@@ -37,30 +37,55 @@ def parse_wifi_data(text):
         line = line.strip()
         if not line:
             continue
+        
+        logger.debug(f"Parsing line: {line}")
             
         # Try pattern 1
         match = re.search(pattern1, line)
         if match:
             ssid, bssid = match.groups()
             results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
+            logger.debug(f"Pattern 1 matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
             continue
             
-        # Try pattern 2
-        match = re.search(pattern2, line)
-        if match:
-            bssid, ssid = match.groups()
-            results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
-            continue
-            
-        # Try pattern 3
+        # Try pattern 3 (SSID MAC format) - Try this before pattern 2
         match = re.search(pattern3, line)
         if match:
             ssid, bssid = match.groups()
             results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
+            logger.debug(f"Pattern 3 matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
+            continue
+            
+        # Try pattern 2 (MAC - SSID format)
+        match = re.search(pattern2, line)
+        if match:
+            bssid, ssid = match.groups()
+            results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
+            logger.debug(f"Pattern 2 matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
+            continue
+        
+        # If none of the patterns match but line contains what looks like a MAC address
+        mac_match = re.search(r'([0-9A-Fa-f]{2}[:-]){4,5}[0-9A-Fa-f]{1,2}|[0-9A-Fa-f]{10,12}', line)
+        if mac_match:
+            bssid = mac_match.group(0)
+            # Get the rest of the line as SSID
+            before_mac = line[:mac_match.start()].strip()
+            after_mac = line[mac_match.end():].strip()
+            
+            # If MAC is at the beginning, use text after it as SSID
+            if before_mac == "":
+                ssid = after_mac if after_mac else "Unknown SSID"
+            else:
+                # Otherwise, use text before MAC as SSID
+                ssid = before_mac
+                
+            results.append({'ssid': ssid, 'bssid': bssid})
+            logger.debug(f"MAC extraction matched: SSID={ssid}, BSSID={bssid}")
             continue
             
     # If no results from patterns, try to extract MAC addresses and pair with nearby text
     if not results:
+        logger.debug("No results from patterns, trying MAC extraction")
         # Find all MAC addresses in the text
         mac_matches = re.finditer(mac_pattern, text)
         
@@ -85,6 +110,7 @@ def parse_wifi_data(text):
                 ssid = words_before.strip() if words_before else "Unknown SSID"
             
             results.append({'ssid': ssid, 'bssid': bssid})
+            logger.debug(f"Context extraction: SSID={ssid}, BSSID={bssid}")
     
     # Log the results
     logger.debug(f"Parsed {len(results)} WiFi networks from input text")
