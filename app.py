@@ -19,7 +19,6 @@ def index():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    """Process the uploaded file containing WiFi data."""
     try:
         if 'file' not in request.files and not request.form.get('text_input'):
             return jsonify({"error": "No file or text input provided"}), 400
@@ -45,6 +44,7 @@ def analyze():
         
         # Lookup OUIs for each BSSID
         results = lookup_ouis(parsed_data)
+        logger.debug(f"Results {results}")
         
         # Format the results
         formatted_results = []
@@ -55,9 +55,12 @@ def analyze():
             formatted_results.append({
                 'ssid': item['ssid'],
                 'bssid': item['bssid'],
-                'vendor': vendor,
-                'flagged': flag
+                'vendor': item['vendor'],
+                'vendor_source': item['vendor_source'],
+                'flagged': item['flagged']
             })
+
+        logger.debug(f"Results {formatted_results} BSSIDs")
         
         return jsonify({
             "results": formatted_results,
