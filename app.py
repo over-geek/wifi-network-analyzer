@@ -30,8 +30,6 @@ def analyze():
         else:
             content = request.form.get('text_input', '')
         
-        # Parse data and find OUIs
-        logger.debug(f"Received input content of length: {len(content)}")
         
         if not content.strip():
             return jsonify({"error": "The provided input is empty"}), 400
@@ -44,7 +42,6 @@ def analyze():
         
         # Lookup OUIs for each BSSID
         results = lookup_ouis(parsed_data)
-        logger.debug(f"Results {results}")
         
         # Format the results
         formatted_results = []
@@ -59,8 +56,6 @@ def analyze():
                 'vendor_source': item['vendor_source'],
                 'flagged': item['flagged']
             })
-
-        logger.debug(f"Results {formatted_results} BSSIDs")
         
         return jsonify({
             "results": formatted_results,
@@ -70,7 +65,7 @@ def analyze():
         
     except Exception as e:
         logger.exception("Error processing WiFi data")
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+        return jsonify({"error": "An internal server error occurred"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

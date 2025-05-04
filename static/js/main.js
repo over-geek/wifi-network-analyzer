@@ -238,12 +238,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Filter networks
         const unknownVendorNetworks = analysisResults.filter(network => 
             !isOrganizationNetwork(network.ssid, orgSsids) && 
-            (!network.vendor || network.vendor.includes('UNKNOWN'))
+            (!network.vendor || network.vendor.includes('no match'))
         );
         
         const knownVendorNetworks = analysisResults.filter(network => 
             !isOrganizationNetwork(network.ssid, orgSsids) && 
-            network.vendor && !network.vendor.includes('UNKNOWN')
+            network.vendor && !network.vendor.includes('no match')
         );
         
         // Format for unknown vendor networks (excluding organization networks)

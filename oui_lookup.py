@@ -116,59 +116,6 @@ def get_oui(mac):
                 logger.warning(f"Failed to get OUI from macvendors.com API: {response.status_code}")
         except Exception as e:
             logger.warning(f"Error with macvendors.com lookup: {str(e)}")
-
-    # 4. Fallback to our built-in common OUIs list
-    # Use a local lookup approach as a fallback
-    common_ouis = {
-        "000000": "Locally Administered",
-        "000C29": "VMware",
-        "000CE5": "Dell",
-        "001122": "Cisco Systems",
-        "0050C2": "IEEE Registration Authority",
-        "00A0C6": "Qualcomm",
-        "00D0C9": "NVIDIA",
-        "001A11": "Google",
-        "002272": "American Micro-Fuel Device Corp",
-        "002637": "Samsung Electronics",
-        "0050F2": "Microsoft",
-        "001C42": "Parallels",
-        "74C63B": "AzureWave Technology",
-        "74D7CA": "Panasonic Automotive",
-        "74D02B": "ASUSTek Computer",
-        "748114": "Apple",
-        "74DA38": "Edimax Technology",
-        "24A074": "Apple",
-        "647002": "TP-Link",
-        "D8A3B1": "Juniper Networks",
-        "FCFBFB": "Ubiquiti Networks",
-        "F8E71E": "Ruckus Wireless",
-        "2C6E85": "Intel Corporate",
-        "B4B024": "TP-Link Systems Inc",
-        "B8B81E": "Intel Corporate",
-        "E89F6D": "Apple, Inc.",
-        "B8D50B": "Sunitec Enterprise Co., Ltd",
-        "244B03": "Samsung Electronics Co., Ltd",
-        "3C2AF4": "Brother Industries, Ltd",
-        "00B0D0": "Dell Computer Corp",
-        "001B63": "Apple Inc",
-        "F45C89": "Apple, Inc.",
-        "78E7D1": "Hewlett Packard",
-        "C8D083": "Apple, Inc."
-    }
-
-    # Try to match with the OUI part only
-    for oui_length in range(min(6, len(oui)), 0, -2):
-        oui_part = oui[:oui_length]
-
-        # Check if any known OUI matches (even partially)
-        for known_oui, vendor in common_ouis.items():
-            if known_oui.startswith(oui_part):
-                if is_truncated or oui_length < 6:
-                    vendor = f"{vendor} (based on partial MAC)"
-                logger.info(f"Found vendor from local fallback database: {vendor}")
-                return vendor, "fallback"
-
-    logger.info(f"No vendor found for MAC: {mac}")
     return None, None
 
 
@@ -185,10 +132,11 @@ def lookup_ouis(wifi_data):
             results.append({
                 'ssid': entry.get('ssid', ''),
                 'bssid': normalized_mac if normalized_mac else bssid,
-                'vendor': vendor if vendor else "UNKNOWN VENDOR - POTENTIALLY ROGUE",
+                'vendor': vendor if vendor else "no match",
                 'vendor_source': source,
                 'flagged': vendor is None
             })
+            logger.debug(f"Lookup result: {results}")
         else:
             logger.warning(f"Skipping entry with no BSSID: {entry}")
 

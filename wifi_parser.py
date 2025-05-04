@@ -32,14 +32,11 @@ def parse_wifi_data(text):
         line = line.strip()
         if not line:
             continue
-        
-        logger.debug(f"Parsing line: {line}")
 
         # Try standalone MAC address format (including truncated)
         match = re.match(pattern5, line.strip())
         if match:
             # If it's just a MAC address with no SSID, use "Unknown" as SSID
-            logger.debug(f"Standalone MAC detected: {line}")
             results.append({'ssid': 'Unknown SSID', 'bssid': line.strip()})
             continue
         
@@ -48,7 +45,6 @@ def parse_wifi_data(text):
         if match:
             _, ssid, bssid = match.groups()  # Ignore the True/False flag
             results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
-            logger.debug(f"WiFi surveyor format matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
             continue
             
         # Try pattern 1
@@ -56,7 +52,6 @@ def parse_wifi_data(text):
         if match:
             ssid, bssid = match.groups()
             results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
-            logger.debug(f"Pattern 1 matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
             continue
             
         # Try pattern 3 (SSID MAC format) - Try this before pattern 2
@@ -66,7 +61,6 @@ def parse_wifi_data(text):
             # Clean up 'True' or 'False' prefixes that might be part of the SSID
             ssid = re.sub(r'^(True|False)\s+', '', ssid.strip())
             results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
-            logger.debug(f"Pattern 3 matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
             continue
             
         # Try pattern 2 (MAC - SSID format)
@@ -74,13 +68,11 @@ def parse_wifi_data(text):
         if match:
             bssid, ssid = match.groups()
             results.append({'ssid': ssid.strip(), 'bssid': bssid.strip()})
-            logger.debug(f"Pattern 2 matched: SSID={ssid.strip()}, BSSID={bssid.strip()}")
             continue
         
         # If the line contains tab-separated values (like from wifi surveyor or CSV exports)
         if '\t' in line:
             parts = line.split('\t')
-            logger.debug(f"Processing tab-separated line with {len(parts)} parts")
             mac_address = None
             ssid = None
             
@@ -99,7 +91,6 @@ def parse_wifi_data(text):
                 # Remove any "True" or "False" prefix if present
                 ssid = re.sub(r'^(True|False)\s+', '', ssid)
                 results.append({'ssid': ssid, 'bssid': mac_address})
-                logger.debug(f"Tab-separated format: SSID={ssid}, BSSID={mac_address}")
                 continue
         
         # If none of the patterns match but line contains what looks like a MAC address
@@ -120,12 +111,10 @@ def parse_wifi_data(text):
                 ssid = re.sub(r'^(True|False)\s+', '', ssid)
                 
             results.append({'ssid': ssid, 'bssid': bssid})
-            logger.debug(f"MAC extraction matched: SSID={ssid}, BSSID={bssid}")
             continue
             
     # If no results from patterns, try to extract MAC addresses and pair with nearby text
     if not results:
-        logger.debug("No results from patterns, trying MAC extraction")
         # Find all MAC addresses in the text
         mac_matches = re.finditer(mac_pattern, text)
         
@@ -151,9 +140,5 @@ def parse_wifi_data(text):
                 ssid = words_before.strip() if words_before else "Unknown SSID"
             
             results.append({'ssid': ssid, 'bssid': bssid})
-            logger.debug(f"Context extraction: SSID={ssid}, BSSID={bssid}")
-    
-    # Log the results
-    logger.debug(f"Parsed {len(results)} WiFi networks from input text")
     
     return results
