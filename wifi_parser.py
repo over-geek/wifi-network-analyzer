@@ -5,15 +5,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 def parse_wifi_data(text):
-    """
-    Parse WiFi data from a text string containing SSID/BSSID pairs.
-    
-    Args:
-        text (str): Text containing SSID and BSSID information
-        
-    Returns:
-        list: List of dictionaries with 'ssid' and 'bssid' keys
-    """
     results = []
     
     # Regular expressions for different potential formats
@@ -28,11 +19,12 @@ def parse_wifi_data(text):
     
     # Pattern for WiFi surveyor app format: [True/False] [SSID] [MAC] [other data]
     pattern4 = r'(True|False)\s+([^\t]+)\s+([0-9A-Fa-f:.-]{10,17})'
+
+    # Pattern for standalone MAC address (including truncated ones)
+    pattern5 = r'^([0-9A-Fa-f]{2}[:-]){1,5}([0-9A-Fa-f]{1,2})$'
     
     # MAC address pattern for extracting from messy text - more lenient
     mac_pattern = r'([0-9A-Fa-f]{2}[:-]){4,5}([0-9A-Fa-f]{1,2})|([0-9A-Fa-f]{10,12})'
-    
-    # Try multiple parsing strategies
     
     # Strategy 1: Line by line with specific patterns
     lines = text.splitlines()
@@ -42,6 +34,14 @@ def parse_wifi_data(text):
             continue
         
         logger.debug(f"Parsing line: {line}")
+
+        # Try standalone MAC address format (including truncated)
+        match = re.match(pattern5, line.strip())
+        if match:
+            # If it's just a MAC address with no SSID, use "Unknown" as SSID
+            logger.debug(f"Standalone MAC detected: {line}")
+            results.append({'ssid': 'Unknown SSID', 'bssid': line.strip()})
+            continue
         
         # Try WiFi surveyor app format first
         match = re.search(pattern4, line)
