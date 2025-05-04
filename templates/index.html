@@ -56,7 +56,6 @@
                                     placeholder="Enter WiFi data here..."></textarea>
                                 <div class="d-flex justify-content-between mt-2">
                                     <small class="text-muted">Supported formats: "SSID BSSID", "BSSID - SSID", "SSID: name, BSSID: mac"</small>
-                                    <button id="sample-btn" class="btn btn-sm btn-outline-secondary">Load Sample Data</button>
                                 </div>
                             </div>
                         </div>
@@ -137,7 +136,7 @@
                                 </div>
                                 <div class="alert alert-info" role="alert">
                                     <i class="bi bi-info-circle-fill"></i>
-                                    <strong>API Status:</strong> For improved vendor detection, you can configure your own macaddress.io API key by setting the MACADDRESS_IO_API_KEY environment variable.
+                                    <strong>Truncated MAC Addresses:</strong> The tool now supports truncated MAC addresses (e.g., b4:b0:24) and will attempt to identify vendors based on available prefix.
                                 </div>
                             </div>
                             
