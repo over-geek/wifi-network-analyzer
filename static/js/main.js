@@ -65,6 +65,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const fileName = this.files[0]?.name || 'No file selected';
         document.getElementById('file-name').textContent = fileName;
     });
+
+    document.querySelectorAll('#inputTabs .nav-link').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function (e) {
+            // Clear the other input when switching tabs
+            if (e.target.id === 'file-tab') {
+                textInput.value = '';
+            } else if (e.target.id === 'text-tab') {
+                // Clear file input (this requires a workaround since file inputs can't be directly cleared)
+                fileInput.value = '';
+                document.getElementById('file-name').textContent = 'No file selected';
+            }
+        });
+    });
     
     // Analyze button click handler
     analyzeBtn.addEventListener('click', function() {
@@ -257,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .map(network => `"${network.vendor}"`)
                 .join(', ');
                 
-            knownVendorsTextarea.value = formattedSsids + '\n\n' + formattedVendors;
+            knownVendorsTextarea.value = formattedSsids + '\n\n----------------------------------------------\n\n' + formattedVendors;
         } else {
             knownVendorsTextarea.value = 'No known vendor networks found (excluding organization networks)';
         }
@@ -287,20 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
-    }
-    
-    // Sample data button (for demonstration)
-    const sampleBtn = document.getElementById('sample-btn');
-    if (sampleBtn) {
-        sampleBtn.addEventListener('click', function() {
-            textInput.value = `Company WiFi 00:11:22:33:44:55
-Guest Network 66:77:88:99:aa:bb
-Conference Room aa:bb:cc:dd:ee:ff
-SSID: IT Department, BSSID: 11:22:33:44:55:66
-Free WiFi 12:34:56:78:90:ab
-ICPS 74:83:c2:2d:1d:b1
-Visitor 24:a0:74:1e:9f:ac`;
-        });
     }
     
     // Update analysis button event listener
